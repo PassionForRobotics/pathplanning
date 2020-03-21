@@ -9,19 +9,16 @@
 #else
     #include "image2.h"
 #endif
-
-
-
-
-#define TEST_MODE (false)
+ 
+#define TEST_MODE (true)
 #define TEST_1 (true && TEST_MODE)
 
 using namespace std; 
 
 #if (TEST_MODE==true)
     
-    #define GRID_SIZE_X   (5)
-    #define GRID_SIZE_Y   (5)
+    #define GRID_SIZE_X   (10)
+    #define GRID_SIZE_Y   (10)
 
 #else
     
@@ -42,17 +39,22 @@ typedef struct Cell Cell;
 
 Cell path[GRID_SIZE_X][GRID_SIZE_Y]; // output map
 Cell cost_map[GRID_SIZE_X][GRID_SIZE_Y]; // output map
+Cell best_path[GRID_SIZE_X][GRID_SIZE_Y]; // output map
 
 Cell grid[GRID_SIZE_X][GRID_SIZE_Y] 
 #if (TEST_MODE==true)
     #if (TEST_1==true)
         = { 
-            {{.x=0, .y=0, .f=1.0f},{.x=1, .y=0, .f=0.0f},{.x=2, .y=0, .f=0.0f},{.x=3, .y=0, .f=1.0f},{.x=4, .y=0, .f=1.0f}},
-            {{.x=0, .y=1, .f=1.0f},{.x=1, .y=1, .f=0.0f},{.x=2, .y=1, .f=1.0f},{.x=3, .y=1, .f=1.0f},{.x=4, .y=1, .f=1.0f}},
-            {{.x=0, .y=2, .f=1.0f},{.x=1, .y=2, .f=0.0f},{.x=2, .y=2, .f=1.0f},{.x=3, .y=2, .f=1.0f},{.x=4, .y=2, .f=1.0f}},
-            {{.x=0, .y=3, .f=1.0f},{.x=1, .y=3, .f=0.0f},{.x=2, .y=3, .f=1.0f},{.x=3, .y=3, .f=1.0f},{.x=4, .y=3, .f=1.0f}},
-            {{.x=0, .y=4, .f=1.0f},{.x=1, .y=4, .f=1.0f},{.x=2, .y=4, .f=1.0f},{.x=3, .y=4, .f=1.0f},{.x=4, .y=4, .f=1.0f}},
-             
+            {{.x=0, .y=0, .f=1.0f},{.x=1, .y=0, .f=0.0f},{.x=2, .y=0, .f=0.0f},{.x=3, .y=0, .f=1.0f},{.x=4, .y=0, .f=1.0f},{.x=5, .y=0, .f=1.0f},{.x=6, .y=0, .f=0.0f},{.x=7, .y=0, .f=0.0f},{.x=8, .y=0, .f=1.0f},{.x=9, .y=0, .f=1.0f}},
+            {{.x=0, .y=1, .f=1.0f},{.x=1, .y=1, .f=0.0f},{.x=2, .y=1, .f=1.0f},{.x=3, .y=1, .f=1.0f},{.x=4, .y=1, .f=1.0f},{.x=5, .y=1, .f=1.0f},{.x=6, .y=1, .f=0.0f},{.x=7, .y=1, .f=1.0f},{.x=8, .y=1, .f=1.0f},{.x=9, .y=1, .f=1.0f}},
+            {{.x=0, .y=2, .f=1.0f},{.x=1, .y=2, .f=0.0f},{.x=2, .y=2, .f=1.0f},{.x=3, .y=2, .f=1.0f},{.x=4, .y=2, .f=1.0f},{.x=5, .y=2, .f=1.0f},{.x=6, .y=2, .f=0.0f},{.x=7, .y=2, .f=1.0f},{.x=8, .y=2, .f=1.0f},{.x=9, .y=2, .f=1.0f}},
+            {{.x=0, .y=3, .f=1.0f},{.x=1, .y=3, .f=0.0f},{.x=2, .y=3, .f=1.0f},{.x=3, .y=3, .f=1.0f},{.x=4, .y=3, .f=1.0f},{.x=5, .y=3, .f=1.0f},{.x=6, .y=3, .f=0.0f},{.x=7, .y=3, .f=1.0f},{.x=8, .y=3, .f=1.0f},{.x=9, .y=3, .f=1.0f}},
+            {{.x=0, .y=4, .f=1.0f},{.x=1, .y=4, .f=1.0f},{.x=2, .y=4, .f=1.0f},{.x=3, .y=4, .f=1.0f},{.x=4, .y=4, .f=1.0f},{.x=5, .y=4, .f=1.0f},{.x=6, .y=4, .f=1.0f},{.x=7, .y=4, .f=1.0f},{.x=8, .y=4, .f=1.0f},{.x=9, .y=4, .f=1.0f}},
+            {{.x=0, .y=5, .f=1.0f},{.x=1, .y=5, .f=0.0f},{.x=2, .y=5, .f=0.0f},{.x=3, .y=5, .f=1.0f},{.x=4, .y=5, .f=1.0f},{.x=5, .y=5, .f=1.0f},{.x=6, .y=5, .f=0.0f},{.x=7, .y=5, .f=0.0f},{.x=8, .y=5, .f=1.0f},{.x=9, .y=5, .f=1.0f}},
+            {{.x=0, .y=6, .f=1.0f},{.x=1, .y=6, .f=0.0f},{.x=2, .y=6, .f=1.0f},{.x=3, .y=6, .f=1.0f},{.x=4, .y=6, .f=1.0f},{.x=5, .y=6, .f=1.0f},{.x=6, .y=6, .f=0.0f},{.x=7, .y=6, .f=1.0f},{.x=8, .y=6, .f=1.0f},{.x=9, .y=6, .f=1.0f}},
+            {{.x=0, .y=7, .f=1.0f},{.x=1, .y=7, .f=0.0f},{.x=2, .y=7, .f=1.0f},{.x=3, .y=7, .f=1.0f},{.x=4, .y=7, .f=1.0f},{.x=5, .y=7, .f=1.0f},{.x=6, .y=7, .f=0.0f},{.x=7, .y=7, .f=1.0f},{.x=8, .y=7, .f=1.0f},{.x=9, .y=7, .f=1.0f}},
+            {{.x=0, .y=8, .f=1.0f},{.x=1, .y=8, .f=0.0f},{.x=2, .y=8, .f=1.0f},{.x=3, .y=8, .f=1.0f},{.x=4, .y=8, .f=1.0f},{.x=5, .y=8, .f=1.0f},{.x=6, .y=8, .f=0.0f},{.x=7, .y=8, .f=1.0f},{.x=8, .y=8, .f=1.0f},{.x=9, .y=8, .f=1.0f}},
+            {{.x=0, .y=9, .f=1.0f},{.x=1, .y=9, .f=0.0f},{.x=2, .y=9, .f=1.0f},{.x=3, .y=9, .f=1.0f},{.x=4, .y=9, .f=1.0f},{.x=5, .y=9, .f=1.0f},{.x=6, .y=9, .f=0.0f},{.x=7, .y=9, .f=1.0f},{.x=8, .y=9, .f=1.0f},{.x=9, .y=9, .f=1.0f}}
         };
     #else
         ;
@@ -75,23 +77,29 @@ float cost_depth ;
 
 void printCells(Cell cells[GRID_SIZE_X][GRID_SIZE_Y], int w , int h);
 bool findMultiMapByValue(multimap<float, pair<int, int> > mp , pair<int, int> value, multimap<float, pair<int, int> >::iterator *ret_it);
+void saveImage(Cell cells[GRID_SIZE_X][GRID_SIZE_X], int w, int h, string file_name);
+
 void initializeCells(Cell cells[GRID_SIZE_X][GRID_SIZE_Y], int w , int h){
     //cout << "Array :" << aname << " : ";
     for(auto i = 0 ; i < w ; i++){
         for(auto j = 0 ; j < h ; j++){
-             
+            
+            path[i][j].f = 0.0f; // This can become bug later
+            cost_map[i][j].f = 0.0f; // This can become bug later
+            best_path[i][j].f = 0.0f; // This can become bug later
+            
              #if (TEST_MODE==true)
                 
-                 cells[i][j].x = i ;
-                 cells[i][j].y = j ; 
+                 
                  
                  #if (TEST_1==true)
                      //
-                 #else    
+                 #else   
+                    cells[i][j].x = i ;
+                    cells[i][j].y = j ;  
                     cells[i][j].f = 1.0f;
                  #endif
-                 path[i][j].f = 0.0f; // This can become bug later
-                 cost_map[i][j].f = 0.0f; // This can become bug later
+               
                  
              #else
                 cells[i][j].f = (float)(image[i][j]>0?1.0f:0.0f);
@@ -192,6 +200,8 @@ void validMoves(Cell moves[3][3], Cell *pos){
              ) 
              {
                 moves[i][j].f = 1.0f;  // It can be used to check if move is valid
+             } else {
+                moves[i][j].f = 0.0f;
              }        
                                
              //moves[i][j].g = 0.0f;
@@ -266,9 +276,11 @@ bool hasReachedGoal(Cell pos){
         #endif        
         
         auto it = not_explored.begin();
+        
+        cost_depth = it->first  ;
  
         explored.insert(make_pair(it->first, make_pair(pos.x, pos.y)));
-        path[pos.y][pos.x].f = 1.0;
+        path[pos.y][pos.x].f = cost_depth;
         
         #if (TEST_MODE==true)
         printMultiMap(string("explored"), explored); 
@@ -344,6 +356,7 @@ bool findMapByValue(map<float, pair<int, int> > mp , pair<int, int> value, map<f
     return result;
 }
 
+int img_cnt=0;
 bool exploration(){
     // check for valid moves and put it in to_be_explored array
     Cell moves[3][3];
@@ -354,6 +367,11 @@ bool exploration(){
         return true;
     }else{
         
+        
+        if(img_cnt == 33){
+            int i = 0;
+            i = img_cnt; // Stop debugger here
+        }
         
         validMoves(moves, &current_pos);
         
@@ -381,7 +399,7 @@ bool exploration(){
                         //if( (moves[i][j].x == current_pos.x) && (moves[i][j].y == current_pos.y) ){
                             // Nothing 
                         //}else{
-                            not_explored.insert(make_pair(1.0+costFunction(moves[i][j]), make_pair(moves[i][j].x, moves[i][j].y)));
+                            not_explored.insert(make_pair(cost_depth+1.0+costFunction(moves[i][j]), make_pair(moves[i][j].x, moves[i][j].y)));
                             cost_map[moves[i][j].x][moves[i][j].y].f = cost_depth+1.0+costFunction(moves[i][j]);
                         //}
                     }
@@ -403,7 +421,13 @@ bool exploration(){
         cost_depth = it->first  - costFunction(current_pos);
         
         explored.insert(make_pair(it->first, make_pair(it->second.first, it->second.second)));
-        path[it->second.first][it->second.second].f = 1.0;
+        path[it->second.first][it->second.second].f = cost_depth;
+        
+        stringstream ss;
+        ss << setfill('0') << setw(6) << img_cnt++;
+        
+        string fn ("./proc/proc_"+ss.str()+".pbm");
+        saveImage( path, GRID_SIZE_X, GRID_SIZE_Y, fn);
         
         #if (TEST_MODE==true)
         printMultiMap(string("explored"), explored); 
@@ -474,15 +498,15 @@ void saveImage(Cell cells[GRID_SIZE_X][GRID_SIZE_X], int w, int h, string file_n
     image_save.append(" ");
     ss.str(std::string());
     
-    ss << 0;
-    image_save.append(ss.str());
-    ss.str(std::string());
-    
+//    ss << 1; //in case of pbm this will not be able to render correctly
+//    image_save.append(ss.str());
+//    ss.str(std::string());
+//    
     image_save.append("\n");
     ss.str(std::string());
     
     long iteration_limit = w*h+1;
-    cout << "Saving ...";
+    //cout << "Saving ...";
     for(auto i = 0 ; i < w ; i++){
         for(auto j = 0 ; j < h ; j++){
             ss << (cells[i][j].f==0.0f?1:0); // As image is inverting
@@ -490,9 +514,9 @@ void saveImage(Cell cells[GRID_SIZE_X][GRID_SIZE_X], int w, int h, string file_n
             ss.str(std::string());
             --iteration_limit;
             
-            if(0==iteration_limit%9000){
-                cout << ".";
-            }
+//            if(0==iteration_limit%9000){
+//                cout << ".";
+//            }
             
         }
     }
@@ -502,6 +526,72 @@ void saveImage(Cell cells[GRID_SIZE_X][GRID_SIZE_X], int w, int h, string file_n
     out << image_save;
     out.close();    
     
+
+}
+
+
+void getBestPath(){
+//    pos = goal
+//    goal_count = 0
+//    while True:
+//        best_path[pos[0], pos[1]] = 1
+//        h_pos = round(path[pos[0], pos[1]], 1)
+//        if h_pos == 1:
+//            break
+//        potential_moves = astar.generate_potential_moves(pos)
+//        for move in potential_moves:
+//            if not astar.valid_move(move):
+//                continue
+//            h_move = path[move[0], move[1]]
+//            if h_move == (h_pos - 1):
+//                goal_count += 1
+//                pos = move
+//                break
+    
+    Cell pos = goal_pos;
+    
+    //cout << "\n\goal_pos: " << goal_pos.x << ","<<goal_pos.y<<"\n"; 
+    int goal_count = 0;
+    float h_move;
+    
+    img_cnt = 0 ; // CHECK
+    
+    while(1){
+        bool break_needed = false;
+        best_path[pos.x][pos.y].f = 1.0f; 
+        float h_pos = round((path[pos.x][pos.y].f)*100000.0f)/100000.0f;
+        
+        stringstream ss;
+        ss << setfill('0') << setw(6) << img_cnt++;
+        string fn ("./bpath/bpath_"+ss.str()+".pbm");
+        saveImage( best_path, GRID_SIZE_X, GRID_SIZE_Y, fn);
+        
+        //cout << "\n\npos: " << pos.x << ","<<pos.y<<" h_pos: " << h_pos << "\n"; 
+        if(h_pos == 1.0){
+            break;
+        }
+        Cell moves[3][3];
+        
+        validMoves(moves, &pos);
+        
+        for(auto i = 0 ; i < 3 ; i++){
+            for(auto j = 0 ; j < 3 ; j++){
+                if(moves[i][j].f==1.0f){ 
+                    h_move = path[moves[i][j].x][ moves[i][j].y].f;
+                    //cout << "move " << moves[i][j].x << "," << moves[i][j].x << " , h_move: " << h_move << " h_pos: " << h_pos << "\n"; 
+                    if( (h_move <= (h_pos-1)) && (h_move != 0.0f) ){
+                        goal_count++;
+                        pos = moves[i][j];
+                        break_needed = true;
+                        break;
+                    }
+                } 
+            }
+            if(break_needed==true){
+                break;
+            }
+        } 
+    }
 
 }
 
@@ -515,8 +605,8 @@ int main()
     start_pos.f = 9999.9;
     
 
-    goal_pos.x = 4;//2008;    
-    goal_pos.y = 4;//984;
+    goal_pos.x = 9;//2008;    
+    goal_pos.y = 9;//984;
     
 
 
@@ -570,56 +660,16 @@ int main()
     cout << "\nDone";
           // minSteps(m, n, d)); 
           
+          
     visulization(); 
-
-
+    
     saveImage( path, GRID_SIZE_X, GRID_SIZE_Y, "output.pbm");
 
-//    stringstream ss;
-//    
-//    //P3 2 3 255
-//    image_save.append("P1 ");
-//    ss << GRID_SIZE_X;
-//    image_save.append(ss.str());
-//    ss.str(std::string());
-//    
-//    image_save.append(" ");
-//    ss.str(std::string());
-//    
-//    ss << GRID_SIZE_Y;
-//    image_save.append(ss.str());
-//    ss.str(std::string());
-//    
-//    image_save.append(" ");
-//    ss.str(std::string());
-//    
-//    ss << 1;
-//    image_save.append(ss.str());
-//    ss.str(std::string());
-//    
-//    image_save.append("\n");
-//    ss.str(std::string());
-//    
-//    iteration_limit = GRID_SIZE_X*GRID_SIZE_Y+1;
-//    cout << "Saving ...";
-//    for(auto i = 0 ; i < GRID_SIZE_X ; i++){
-//        for(auto j = 0 ; j < GRID_SIZE_Y ; j++){
-//            ss << path[i][j].f;
-//            image_save.append(ss.str());
-//            ss.str(std::string());
-//            --iteration_limit;
-//            
-//            if(0==iteration_limit%9000){
-//                cout << ".";
-//            }
-//            
-//        }
-//    }
-//    
-//    
-//    std::ofstream out("output.pbm");
-//    out << image_save;
-//    out.close();
+    getBestPath();
+
+
+    saveImage( best_path, GRID_SIZE_X, GRID_SIZE_Y, "best.pbm");
+ 
     
     cout << "\nDone";
     

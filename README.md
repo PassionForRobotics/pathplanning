@@ -23,4 +23,5 @@ output output.pbm
 Progress
 
 ![](https://raw.githubusercontent.com/PassionForRobotics/pathplanning/master/doc/progress.gif) 
+![](https://raw.githubusercontent.com/PassionForRobotics/pathplanning/master/doc/progress1.gif) 
 
