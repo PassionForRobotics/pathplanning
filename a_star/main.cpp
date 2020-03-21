@@ -41,14 +41,16 @@ typedef struct Cell Cell;
 
 
 Cell path[GRID_SIZE_X][GRID_SIZE_Y]; // output map
+Cell cost_map[GRID_SIZE_X][GRID_SIZE_Y]; // output map
+
 Cell grid[GRID_SIZE_X][GRID_SIZE_Y] 
 #if (TEST_MODE==true)
     #if (TEST_1==true)
         = { 
-            {{.x=0, .y=0, .f=1.0f},{.x=1, .y=0, .f=0.0f},{.x=2, .y=0, .f=1.0f},{.x=3, .y=0, .f=1.0f},{.x=4, .y=0, .f=1.0f}},
+            {{.x=0, .y=0, .f=1.0f},{.x=1, .y=0, .f=0.0f},{.x=2, .y=0, .f=0.0f},{.x=3, .y=0, .f=1.0f},{.x=4, .y=0, .f=1.0f}},
             {{.x=0, .y=1, .f=1.0f},{.x=1, .y=1, .f=0.0f},{.x=2, .y=1, .f=1.0f},{.x=3, .y=1, .f=1.0f},{.x=4, .y=1, .f=1.0f}},
-            {{.x=0, .y=2, .f=1.0f},{.x=1, .y=2, .f=1.0f},{.x=2, .y=2, .f=1.0f},{.x=3, .y=2, .f=1.0f},{.x=4, .y=2, .f=1.0f}},
-            {{.x=0, .y=3, .f=1.0f},{.x=1, .y=3, .f=1.0f},{.x=2, .y=3, .f=1.0f},{.x=3, .y=3, .f=1.0f},{.x=4, .y=3, .f=1.0f}},
+            {{.x=0, .y=2, .f=1.0f},{.x=1, .y=2, .f=0.0f},{.x=2, .y=2, .f=1.0f},{.x=3, .y=2, .f=1.0f},{.x=4, .y=2, .f=1.0f}},
+            {{.x=0, .y=3, .f=1.0f},{.x=1, .y=3, .f=0.0f},{.x=2, .y=3, .f=1.0f},{.x=3, .y=3, .f=1.0f},{.x=4, .y=3, .f=1.0f}},
             {{.x=0, .y=4, .f=1.0f},{.x=1, .y=4, .f=1.0f},{.x=2, .y=4, .f=1.0f},{.x=3, .y=4, .f=1.0f},{.x=4, .y=4, .f=1.0f}},
              
         };
@@ -69,9 +71,10 @@ Cell start_pos;
 Cell goal_pos;
 Cell current_pos;
 
+float cost_depth ;
 
 void printCells(Cell cells[GRID_SIZE_X][GRID_SIZE_Y], int w , int h);
-
+bool findMultiMapByValue(multimap<float, pair<int, int> > mp , pair<int, int> value, multimap<float, pair<int, int> >::iterator *ret_it);
 void initializeCells(Cell cells[GRID_SIZE_X][GRID_SIZE_Y], int w , int h){
     //cout << "Array :" << aname << " : ";
     for(auto i = 0 ; i < w ; i++){
@@ -88,6 +91,7 @@ void initializeCells(Cell cells[GRID_SIZE_X][GRID_SIZE_Y], int w , int h){
                     cells[i][j].f = 1.0f;
                  #endif
                  path[i][j].f = 0.0f; // This can become bug later
+                 cost_map[i][j].f = 0.0f; // This can become bug later
                  
              #else
                 cells[i][j].f = (float)(image[i][j]>0?1.0f:0.0f);
@@ -99,10 +103,13 @@ void initializeCells(Cell cells[GRID_SIZE_X][GRID_SIZE_Y], int w , int h){
     }
     
     #if (TEST_MODE==true)
-    cout << "grid \n";
+    cout << "\ngrid \n";
     printCells(cells, w, h);
-    cout << "path \n";
+    cout << "\npath \n";
     printCells(path, w, h);
+    cout << "\ncost map \n";
+    printCells(cost_map, w, h);
+    
     #endif
 }
 
@@ -113,12 +120,15 @@ void printCells(Cell cells[GRID_SIZE_X][GRID_SIZE_Y], int w , int h){
         for(auto j = 0 ; j < h ; j++){
             cout << " "
             //[" <<cells[i][j].x << ", "<<cells[i][j].y << "] "
-             << round(cells[i][j].f) << " ";
+             << setfill('0') << setw(6) 
+          << fixed << setprecision(3) << cells[i][j].f << " ";
         }
         cout << "\n";
     }
 }
 
+//setfill('0') << setw(5) 
+//          << fixed << setprecision(2) << it->first
 
 void printMultiMap(string name, multimap<float, pair<int, int> > mp){
 
@@ -126,7 +136,9 @@ void printMultiMap(string name, multimap<float, pair<int, int> > mp){
     for(multimap<float, pair<int, int>>::const_iterator it = mp.begin();
         it != mp.end(); ++it)
     {
-        std::cout << "[" << it->second.first << " " << it->second.second << "] " << it->first << "\n";
+        std::cout << "[" << it->second.first << " " << it->second.second << "] " 
+        << setfill('0') << setw(6) 
+        << fixed << setprecision(3) << it->first << "\n";
     }
     cout  << "\n";
 }
@@ -136,7 +148,9 @@ void printMap(string name, map<float, pair<int, int> > mp){
     for(map<float, pair<int, int>>::const_iterator it = mp.begin();
         it != mp.end(); ++it)
     {
-        std::cout << "[" << it->second.first << " " << it->second.second << "] " << it->first << "\n";
+        std::cout << "[" << it->second.first << " " << it->second.second << "] " 
+        << setfill('0') << setw(6) 
+        << fixed << setprecision(3) << it->first << "\n";
     }
     cout  << "\n";
 }
@@ -195,10 +209,10 @@ void validMoves(Cell moves[3][3], Cell *pos){
 
 float costFunction(Cell pos){
     
-    float distance_from_start = sqrt((start_pos.x-pos.x)*(start_pos.x-pos.x) + (start_pos.y-pos.y)*(start_pos.y-pos.y));
+    //float distance_from_start = sqrt((start_pos.x-pos.x)*(start_pos.x-pos.x) + (start_pos.y-pos.y)*(start_pos.y-pos.y));
     float distance_to_goal = sqrt((goal_pos.x-pos.x)*(goal_pos.x-pos.x) + (goal_pos.y-pos.y)*(goal_pos.y-pos.y));
     
-    return (distance_from_start+distance_to_goal);
+    return round((/*distance_from_start+*/distance_to_goal)*10000.0f)/10000.0f;
 }
 
 //
@@ -246,6 +260,26 @@ bool hasReachedGoal(Cell pos){
     if((pos.x==goal_pos.x)&&(pos.y==goal_pos.y)){
         // set final settings to the maps
         
+        
+        #if (TEST_MODE==true)
+        printMultiMap(string("not_explored"), not_explored);   
+        #endif        
+        
+        auto it = not_explored.begin();
+ 
+        explored.insert(make_pair(it->first, make_pair(pos.x, pos.y)));
+        path[pos.y][pos.x].f = 1.0;
+        
+        #if (TEST_MODE==true)
+        printMultiMap(string("explored"), explored); 
+        #endif
+        
+        multimap<float, pair<int, int> >::iterator ret_it;
+
+        // remove the move from not_explored
+        if(true==findMultiMapByValue(not_explored, make_pair(it->second.first, it->second.second), &ret_it)){
+            not_explored.erase(it);
+        }
         return true;
     }
     
@@ -348,6 +382,7 @@ bool exploration(){
                             // Nothing 
                         //}else{
                             not_explored.insert(make_pair(1.0+costFunction(moves[i][j]), make_pair(moves[i][j].x, moves[i][j].y)));
+                            cost_map[moves[i][j].x][moves[i][j].y].f = cost_depth+1.0+costFunction(moves[i][j]);
                         //}
                     }
                 }else{
@@ -364,6 +399,8 @@ bool exploration(){
 
         current_pos.x = it->second.first;
         current_pos.y = it->second.second;
+        
+        cost_depth = it->first  - costFunction(current_pos);
         
         explored.insert(make_pair(it->first, make_pair(it->second.first, it->second.second)));
         path[it->second.first][it->second.second].f = 1.0;
@@ -398,8 +435,11 @@ void visulization(){
 //    }
     
     #if (TEST_MODE==true)
-        cout << "\n";
+        cout << "\npath\n";
         printCells(path, GRID_SIZE_X, GRID_SIZE_Y);
+        cout << "\ncost_map\n";
+        printCells(cost_map, GRID_SIZE_X, GRID_SIZE_Y);
+        
     #endif
 }
 
@@ -434,9 +474,9 @@ void saveImage(Cell cells[GRID_SIZE_X][GRID_SIZE_X], int w, int h, string file_n
     image_save.append(" ");
     ss.str(std::string());
     
-//    ss << 1;
-//    image_save.append(ss.str());
-//    ss.str(std::string());
+    ss << 0;
+    image_save.append(ss.str());
+    ss.str(std::string());
     
     image_save.append("\n");
     ss.str(std::string());
@@ -445,7 +485,7 @@ void saveImage(Cell cells[GRID_SIZE_X][GRID_SIZE_X], int w, int h, string file_n
     cout << "Saving ...";
     for(auto i = 0 ; i < w ; i++){
         for(auto j = 0 ; j < h ; j++){
-            ss << cells[i][j].f;
+            ss << (cells[i][j].f==0.0f?1:0); // As image is inverting
             image_save.append(ss.str());
             ss.str(std::string());
             --iteration_limit;
@@ -460,7 +500,7 @@ void saveImage(Cell cells[GRID_SIZE_X][GRID_SIZE_X], int w, int h, string file_n
     
     std::ofstream out(file_name);
     out << image_save;
-    out.close();
+    out.close();    
     
 
 }
@@ -475,8 +515,8 @@ int main()
     start_pos.f = 9999.9;
     
 
-    goal_pos.x = 4;//2008;
-    goal_pos.y = 3;//984;
+    goal_pos.x = 4;//2008;    
+    goal_pos.y = 4;//984;
     
 
 
@@ -505,6 +545,8 @@ int main()
         #endif
     
     #endif
+    
+    cost_depth = 0.0f;
 
     current_pos = start_pos;
 
